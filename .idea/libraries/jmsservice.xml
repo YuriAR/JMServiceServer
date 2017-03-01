@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="jmsservice">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/br/ifce/jmsservice" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

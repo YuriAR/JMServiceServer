@@ -4,7 +4,10 @@ import br.ifce.User;
 import org.exolab.jms.administration.AdminConnectionFactory;
 import org.exolab.jms.administration.JmsAdminServerIfc;
 
+import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Queue;
+import javax.jms.Topic;
 import javax.jws.WebService;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -90,14 +93,42 @@ public class JMSManager implements JMSServices {
     }
 
     @Override
-    public List<String> listDestinations() {
+    public List<String> listQueues(){
+        List<String> toReturn = new ArrayList<>();
         try {
             Vector destinations = getAdmin().getAllDestinations();
-            //return destinations.iterator();
-            return new ArrayList<>();
+            Iterator iterator = destinations.iterator();
+            while (iterator.hasNext()) {
+                Destination destination = (Destination) iterator.next();
+                if (destination instanceof Queue) {
+                    Queue queue = (Queue) destination;
+                    toReturn.add(queue.getQueueName());
+                }
+            }
+            return toReturn;
         }
         catch (Exception e){
-            return null;
+            return new ArrayList<>();
+        }
+    }
+
+    @Override
+    public List<String> listTopics(){
+        List<String> toReturn = new ArrayList<>();
+        try {
+            Vector destinations = getAdmin().getAllDestinations();
+            Iterator iterator = destinations.iterator();
+            while (iterator.hasNext()) {
+                Destination destination = (Destination) iterator.next();
+                if (destination instanceof Topic) {
+                    Topic topic = (Topic) destination;
+                    toReturn.add(topic.getTopicName());
+                }
+            }
+            return toReturn;
+        }
+        catch (Exception e){
+            return new ArrayList<>();
         }
     }
 

@@ -16,5 +16,6 @@ public interface JMSServices {
     @WebMethod public void deleteDestination(String destName);
     @WebMethod public Integer messagesInQueue(String queueName);
     @WebMethod public void createUser(String userName);
-    @WebMethod public List<String> listDestinations();
+    @WebMethod public List<String> listTopics();
+    @WebMethod public List<String> listQueues();
 }
