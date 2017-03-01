@@ -16,7 +16,7 @@ import java.util.Vector;
  * Created by yurir on 28/02/2017.
  */
 
-@WebService(endpointInterface = "jmsservice.JMSServices")
+@WebService(endpointInterface = "br.ifce.jmsservice.JMSServices")
 public class JMSManager implements JMSServices {
 
     String url = "tcp://localhost:9999/";
@@ -90,10 +90,11 @@ public class JMSManager implements JMSServices {
     }
 
     @Override
-    public Iterator listDestinations() {
+    public List<String> listDestinations() {
         try {
             Vector destinations = getAdmin().getAllDestinations();
-            return destinations.iterator();
+            //return destinations.iterator();
+            return new ArrayList<>();
         }
         catch (Exception e){
             return null;
