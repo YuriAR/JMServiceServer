@@ -1,6 +1,5 @@
 package br.ifce.jmsservice;
 
-import br.ifce.User;
 import org.exolab.jms.administration.AdminConnectionFactory;
 import org.exolab.jms.administration.JmsAdminServerIfc;
 
@@ -9,7 +8,6 @@ import javax.jms.Queue;
 import javax.jws.WebService;
 import javax.naming.Context;
 import javax.naming.InitialContext;
-import java.net.MalformedURLException;
 import java.util.*;
 
 /**
@@ -20,7 +18,6 @@ import java.util.*;
 public class JMSManager implements JMSServices {
 
     String url = "tcp://localhost:3035/";
-    List<User> users;
     JmsAdminServerIfc admin;
     Context context;
     ConnectionFactory factory;
@@ -28,7 +25,6 @@ public class JMSManager implements JMSServices {
     Session session;
 
     public JMSManager(){
-        this.users = new ArrayList<>();
         try {
             this.admin = AdminConnectionFactory.create(url);
             Hashtable properties = new Hashtable();
@@ -75,14 +71,28 @@ public class JMSManager implements JMSServices {
     }
 
     @Override
-    public void createUser(String userName) {
-        User user = new User(userName);
-        if (!user.userExists(users)){
-            createQueue(user.queueName);
-            users.add(user);
+    public boolean createUser(String userName) {
+        if (!queueExists(userName)){
+            createQueue(userName);
+            return true;
         }
         else{
             System.err.println("Failed to create user " + userName);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean queueExists(String queueName) {
+        try {
+            if (admin.destinationExists(queueName)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        catch (Exception e){
+            return false;
         }
     }
 

@@ -1,5 +1,7 @@
 package br.ifce.jmsservice;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
+
 import javax.jws.WebMethod;
 import javax.jws.WebService;
 import java.util.Iterator;
@@ -15,7 +17,8 @@ public interface JMSServices {
     @WebMethod public void createTopic(String topicName);
     @WebMethod public void deleteDestination(String destName);
     @WebMethod public Integer messagesInQueue(String queueName);
-    @WebMethod public void createUser(String userName);
+    @WebMethod public boolean createUser(String userName);
+    @WebMethod public boolean queueExists(String queueName);
     @WebMethod public List<String> listTopics();
     @WebMethod public List<String> listQueues();
     @WebMethod public void putMessageInQueue(String queueName, String msg);
