@@ -18,4 +18,9 @@ public interface JMSServices {
     @WebMethod public void createUser(String userName);
     @WebMethod public List<String> listTopics();
     @WebMethod public List<String> listQueues();
+    @WebMethod public void putMessageInQueue(String queueName, String msg);
+    @WebMethod public String getMessageFromQueue(String queueName);
+    @WebMethod public void subscribeToTopic(String topicName);
+    @WebMethod public void sendMessageToTopic(String topicName);
+
 }

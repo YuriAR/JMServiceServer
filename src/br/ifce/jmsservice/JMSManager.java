@@ -4,16 +4,13 @@ import br.ifce.User;
 import org.exolab.jms.administration.AdminConnectionFactory;
 import org.exolab.jms.administration.JmsAdminServerIfc;
 
-import javax.jms.Destination;
-import javax.jms.JMSException;
+import javax.jms.*;
 import javax.jms.Queue;
-import javax.jms.Topic;
 import javax.jws.WebService;
+import javax.naming.Context;
+import javax.naming.InitialContext;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Created by yurir on 28/02/2017.
@@ -22,24 +19,44 @@ import java.util.Vector;
 @WebService(endpointInterface = "br.ifce.jmsservice.JMSServices")
 public class JMSManager implements JMSServices {
 
-    String url = "tcp://localhost:9999/";
+    String url = "tcp://localhost:3035/";
     List<User> users;
     JmsAdminServerIfc admin;
+    Context context;
+    ConnectionFactory factory;
+    Connection connection;
+    Session session;
 
     public JMSManager(){
         this.users = new ArrayList<>();
+        try {
+            this.admin = AdminConnectionFactory.create(url);
+            Hashtable properties = new Hashtable();
+            properties.put(Context.INITIAL_CONTEXT_FACTORY,
+                    "org.exolab.jms.jndi.InitialContextFactory");
+            properties.put(Context.PROVIDER_URL, url);
+
+            this.context = new InitialContext(properties);
+            this.factory = (ConnectionFactory) context.lookup("ConnectionFactory");
+            this.connection = factory.createConnection();
+            this.session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void createQueue(String queueName) {
         try {
             Boolean isQueue = Boolean.TRUE;
-            if (!getAdmin().addDestination(queueName, isQueue)) {
+            if (!admin.addDestination(queueName, isQueue)) {
                 System.err.println("Failed to create queue " + queueName);
             }
         }
         catch (Exception e){
             System.err.println("Failed to create queue " + queueName);
+            e.printStackTrace();
         }
     }
 
@@ -47,12 +64,13 @@ public class JMSManager implements JMSServices {
     public void createTopic(String topicName) {
         try {
             Boolean isQueue = Boolean.FALSE;
-            if (!getAdmin().addDestination(topicName, isQueue)) {
+            if (!admin.addDestination(topicName, isQueue)) {
                 System.err.println("Failed to create topic " + topicName);
             }
         }
         catch (Exception e){
-            System.err.println("Failed to create queue " + topicName);
+            System.err.println("Failed to create topic " + topicName);
+            e.printStackTrace();
         }
     }
 
@@ -71,22 +89,24 @@ public class JMSManager implements JMSServices {
     @Override
     public void deleteDestination(String destName) {
         try{
-            if (!getAdmin().removeDestination(destName)) {
+            if (!admin.removeDestination(destName.split("-")[0].replace(" ", ""))) {
                 System.err.println("Failed to remove destination " + destName);
             }
         }
         catch (Exception e){
             System.err.println("Failed to remove destination " + destName);
+            e.printStackTrace();
         }
     }
 
     @Override
     public Integer messagesInQueue(String queueName) {
         try{
-            return getAdmin().getQueueMessageCount(queueName);
+            return admin.getQueueMessageCount(queueName);
         }
         catch (Exception e){
             System.err.println("Failed to count messages in " + queueName);
+            e.printStackTrace();
             return 0;
         }
 
@@ -96,7 +116,7 @@ public class JMSManager implements JMSServices {
     public List<String> listQueues(){
         List<String> toReturn = new ArrayList<>();
         try {
-            Vector destinations = getAdmin().getAllDestinations();
+            Vector destinations = admin.getAllDestinations();
             Iterator iterator = destinations.iterator();
             while (iterator.hasNext()) {
                 Destination destination = (Destination) iterator.next();
@@ -116,7 +136,7 @@ public class JMSManager implements JMSServices {
     public List<String> listTopics(){
         List<String> toReturn = new ArrayList<>();
         try {
-            Vector destinations = getAdmin().getAllDestinations();
+            Vector destinations = admin.getAllDestinations();
             Iterator iterator = destinations.iterator();
             while (iterator.hasNext()) {
                 Destination destination = (Destination) iterator.next();
@@ -128,15 +148,49 @@ public class JMSManager implements JMSServices {
             return toReturn;
         }
         catch (Exception e){
+            e.printStackTrace();
             return new ArrayList<>();
         }
     }
 
-    private JmsAdminServerIfc getAdmin() throws MalformedURLException, JMSException{
-        if (admin == null){
-            admin = AdminConnectionFactory.create(url);
+    @Override
+    public void putMessageInQueue(String queueName, String msg) {
+        try {
+            Destination destination = (Destination) context.lookup(queueName);
+            connection.start();
+            MessageProducer sender = session.createProducer(destination);
+            TextMessage message = session.createTextMessage(msg);
+            sender.send(message);
         }
-        return admin;
+        catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
+    @Override
+    public String getMessageFromQueue(String queueName) {
+        try {
+            Destination destination = (Destination) context.lookup(queueName);
+            MessageConsumer receiver = session.createConsumer(destination);
+            connection.start();
+
+            TextMessage message = (TextMessage) receiver.receive();
+            System.out.println("Received message: " + message.getText());
+            return message.getText();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public void subscribeToTopic(String topicName) {
+        System.out.println("Não implementado");
+    }
+
+    @Override
+    public void sendMessageToTopic(String topicName) {
+        System.out.println("Não implementado");
     }
 }
